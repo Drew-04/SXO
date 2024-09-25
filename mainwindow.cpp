@@ -41,7 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
     indicatorButton = new QPushButton(this);  //+
     indicatorButton->setFixedSize(130, 125);  //+
     indicatorButton->setEnabled(false);  //+
-    indicatorButton->move(445, 10);  // Установка кнопки по заданным координатам  //+
+    indicatorButton->move(445, 10);  // Установка кнопки по заданным координатам
     updateIndicatorButton(); // Обновление кнопки-индикатора
 
     // Создание кнопки "Начать заново"
@@ -223,16 +223,16 @@ void MainWindow::buttonClick()
 
 
 int** MainWindow::convertBlocksToArray() {
-    // Создаём массив 9x9
+    // Создание массива 9x9
     int** result = new int*[9];
     for (int i = 0; i < 9; i++) {
         result[i] = new int[9];
         for (int j = 0; j < 9; j++) {
-            result[i][j] = 0; // Инициализируем пустыми клетками
+            result[i][j] = 0; // Инициализация с пустыми клетками
         }
     }
 
-    // Преобразуем состояние из blocks[3][3] в массив 9x9
+    // Преобразование состояния из blocks[3][3] в массив 9x9
     for (int blockRow = 0; blockRow < 3; blockRow++) {
         for (int blockCol = 0; blockCol < 3; blockCol++) {
             Block &block = blocks[blockRow][blockCol];
@@ -250,7 +250,7 @@ int** MainWindow::convertBlocksToArray() {
                         result[globalRow][globalCol] = -1; // Нолик
                     }
 
-                    // Проверяем, заблокирована ли клетка
+                    // Проверка, заблокирована ли клетка
                     if (result[globalRow][globalCol] != 1 && result[globalRow][globalCol] != -1 && (block.hasWinner || button->isEnabled() == false)) {
                         result[globalRow][globalCol] = 2; // Заблокированная клетка
                     }
@@ -304,7 +304,7 @@ int MainWindow::evaluateBoard(int** result, bool isComputerCross) {
 }
 
 
-// Вспомогательная функция для проверки победителя в блоке 3x3
+// Функция для проверки победителя в блоке 3x3
 int MainWindow::checkBlockWinner(int** result, int blockRow, int blockCol, int computerSymbol, int playerSymbol) {
     // Начальные координаты блока в массиве result
     int startRow = blockRow * 3;
@@ -327,7 +327,7 @@ int MainWindow::checkBlockWinner(int** result, int blockRow, int blockCol, int c
         }
     }
 
-    // Проверяем диагонали блока
+    // Проверка диагоналей блока
     if (result[startRow][startCol] == result[startRow + 1][startCol + 1] &&
         result[startRow][startCol] == result[startRow + 2][startCol + 2]) {
         if (result[startRow][startCol] == computerSymbol) return 1; // Победа компьютера
@@ -342,6 +342,38 @@ int MainWindow::checkBlockWinner(int** result, int blockRow, int blockCol, int c
 
     return 0; // Никто не выиграл в этом блоке
 }
+
+
+void MainWindow::toggleCellLock(int** board, int lastRow, int lastCol){
+    // Поиск блока и ячейки внутри блока, в которые был сделан последний ход
+    int blockRow = lastRow % 3; // Координата строки блока
+    int blockCol = lastCol % 3; // Координата столбца блока
+
+    // Обход по всем ячейкам игрового поля
+    for (int row = 0; row < 9; row++) {
+        for (int col = 0; col < 9; col++) {
+            // Нахождение координат блока для текущей ячейки
+            int currentBlockRow = row / 3;
+            int currentBlockCol = col / 3;
+
+            // Если текущая ячейка находится не в нужном блоке и не занята, заблокировать её
+            if (currentBlockRow == blockRow && currentBlockCol == blockCol) {
+                if (board[row][col] == 0) {
+                    board[row][col] = 2; // Блокировка клетки (ставим 2 вместо 0)
+                } else if (board[row][col] == 2) {
+                    board[row][col] = 0; // Разблокировка клетки (ставим 0 вместо 2)
+                }
+            }
+            // Если блок уже выигран или ничья, разблокировать все клетки
+            else if (board[row][col] == 2) {
+                board[row][col] = 0; // Разблокировка клетки (ставим 0 вместо 2)
+            }
+        }
+    }
+}
+
+
+
 
 
 void MainWindow::computerClickedButton()
@@ -654,9 +686,6 @@ void MainWindow::showVictoryMessage(const QIcon &winnerIcon)
 
 void MainWindow::resetGame()
 {
-    // Сброс состояния игры
-    //isCrossTurn = true;
-    //showInitialDialog();
     // Удаление всех больших кнопок победителей и их очистка
     for (int blockRow = 0; blockRow < 3; ++blockRow)
     {

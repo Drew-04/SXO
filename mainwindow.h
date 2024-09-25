@@ -54,6 +54,7 @@ class MainWindow: public QMainWindow
     void debugArrayOutput();
     int evaluateBoard(int** result, bool isComputerCross);
     int checkBlockWinner(int** result, int blockRow, int blockCol, int computerSymbol, int playerSymbol);
+    void toggleCellLock(int** board, int lastRow, int lastCol);
 
     struct GameState {
         int** board;
@@ -62,6 +63,16 @@ class MainWindow: public QMainWindow
     };
 
     GameState currentState;
+
+    struct TreeNode {
+        //GameState currentState; // Текущее состояние игрового поля
+        TreeNode* parent; // Указатель на предка
+        int depth; // Глубина текущего узла
+        int moveRow; // Координата строки для хода, ведущего к этому состоянию
+        int moveCol; // Координата столбца для хода, ведущего к этому состоянию
+    };
+
+    std::vector<TreeNode*> generateChildren(TreeNode* node, bool isComputerTurn);
 
     void createField();
     void checkForVictory(Block &block);
