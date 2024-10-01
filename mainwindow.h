@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "AI.h"
 #include <QMainWindow>
 #include <QGridLayout>
 #include <QPushButton>
@@ -8,6 +9,7 @@
 #include <QIcon>
 #include <vector>
 #include <QDialog>
+#include <utility>
 
 
 QT_BEGIN_NAMESPACE
@@ -56,23 +58,9 @@ class MainWindow: public QMainWindow
     int checkBlockWinner(int** result, int blockRow, int blockCol, int computerSymbol, int playerSymbol);
     void toggleCellLock(int** board, int lastRow, int lastCol);
 
-    struct GameState {
-        int** board;
-        bool isComputerCross;
-        int evaluation;
-    };
-
     GameState currentState;
-
-    struct TreeNode {
-        //GameState currentState; // Текущее состояние игрового поля
-        TreeNode* parent; // Указатель на предка
-        int depth; // Глубина текущего узла
-        int moveRow; // Координата строки для хода, ведущего к этому состоянию
-        int moveCol; // Координата столбца для хода, ведущего к этому состоянию
-    };
-
-    std::vector<TreeNode*> generateChildren(TreeNode* node, bool isComputerTurn);
+    std::vector<GameState> getAllPossibleStates(int** currentBoard, bool isCrossTurn);
+    void findBestMove(int** board, bool isComputerCross, int& bestRow, int& bestCol);
 
     void createField();
     void checkForVictory(Block &block);
