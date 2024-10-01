@@ -443,7 +443,7 @@ std::vector<GameState> MainWindow::getAllPossibleStates(int** board, bool isComp
                 }
 
                 // Делаем ход в эту клетку (1 - крестик, -1 - нолик)
-                newBoard[row][col] = isComputerCross ? -1 : 1;
+                newBoard[row][col] = isComputerCross ? 1 : -1;
 
                 // Создаем новое состояние
                 GameState newState;
@@ -469,78 +469,77 @@ std::vector<GameState> MainWindow::getAllPossibleStates(int** board, bool isComp
     return possibleStates;
 }
 
-void MainWindow::findBestMove(int** board, bool isComputerCross, int& bestRow, int& bestCol) {
-    int bestEvaluation = -9999;  // Начальная минимальная оценка для компьютера
-    bestRow = -1;  // Инициализация строк и столбцов наилучшего хода
-    bestCol = -1;
-
-    // Получаем все возможные состояния для первого хода компьютера
-    //currentState.evaluation = evaluateBoard(currentState.board, currentState.isComputerCross);
-    std::vector<GameState> firstMoves = getAllPossibleStates(board, isComputerCross);
-    qDebug() << "Оценка текущего состояния игрового поля:" << currentState.evaluation;
-    // Перебираем все возможные ходы компьютера (первый уровень)
-    for (GameState& firstMove : firstMoves) {
-        currentState.evaluation = evaluateBoard(firstMove.board, firstMove.isComputerCross);
-        if (firstMove.evaluation == 1) {
-            bestRow = firstMove.lastMoveRow;
-            bestCol = firstMove.lastMoveCol;
-            return;  // Если есть победа, немедленно возвращаем этот ход
-        }
-    }
-    std::srand(std::time(0)); // Инициализация генератора случайных чисел
-    int randomIndex = std::rand() % firstMoves.size();
-    bestRow = firstMoves[randomIndex].lastMoveRow;
-    bestCol = firstMoves[randomIndex].lastMoveCol;
-}
-
 //void MainWindow::findBestMove(int** board, bool isComputerCross, int& bestRow, int& bestCol) {
 //    int bestEvaluation = -9999;  // Начальная минимальная оценка для компьютера
 //    bestRow = -1;  // Инициализация строк и столбцов наилучшего хода
 //    bestCol = -1;
 //
 //    // Получаем все возможные состояния для первого хода компьютера
+//    //currentState.evaluation = evaluateBoard(currentState.board, currentState.isComputerCross);
 //    std::vector<GameState> firstMoves = getAllPossibleStates(board, isComputerCross);
-//
 //    // Перебираем все возможные ходы компьютера (первый уровень)
 //    for (GameState& firstMove : firstMoves) {
-//        if (evaluateBoard(firstMove.board, isComputerCross) == 1) {  // Здесь предполагается, что 1 - победа компьютера
+//        currentState.evaluation = evaluateBoard(firstMove.board, firstMove.isComputerCross);
+//        if (firstMove.evaluation == 1) {
 //            bestRow = firstMove.lastMoveRow;
 //            bestCol = firstMove.lastMoveCol;
 //            return;  // Если есть победа, немедленно возвращаем этот ход
 //        }
-//        int firstMoveEval = 0;  // Для суммирования оценки ветки
-//
-//        // Получаем все возможные состояния для хода игрока (второй уровень)
-//        std::vector<GameState> secondMoves = getAllPossibleStates(firstMove.board, !isComputerCross);
-//
-//        // Перебираем все ходы игрока
-//        for (GameState& secondMove : secondMoves) {
-//
-//            // Получаем все возможные ходы компьютера (третий уровень)
-//            std::vector<GameState> thirdMoves = getAllPossibleStates(secondMove.board, isComputerCross);
-//
-//            // Для каждой ветки суммируем оценки ходов компьютера на третьем уровне
-//            for (GameState& thirdMove : thirdMoves) {
-//                firstMoveEval += thirdMove.evaluation;
-//            }
-//        }
-//
-//        // Если суммарная оценка лучшая для компьютера, сохраняем координаты хода
-//        if (firstMoveEval > bestEvaluation) {
-//            bestEvaluation = firstMoveEval;
-//            bestRow = firstMove.lastMoveRow;
-//            bestCol = firstMove.lastMoveCol;
-//        }
 //    }
-//
-//    // Если все ветки оцениваются как 0, делаем случайный ход
-//    if (bestEvaluation == 0) {
-//        std::srand(std::time(0)); // Инициализация генератора случайных чисел
-//        int randomIndex = std::rand() % firstMoves.size();
-//        bestRow = firstMoves[randomIndex].lastMoveRow;
-//        bestCol = firstMoves[randomIndex].lastMoveCol;
-//    }
+//    std::srand(std::time(0)); // Инициализация генератора случайных чисел
+//    int randomIndex = std::rand() % firstMoves.size();
+//    bestRow = firstMoves[randomIndex].lastMoveRow;
+//    bestCol = firstMoves[randomIndex].lastMoveCol;
 //}
+
+void MainWindow::findBestMove(int** board, bool isComputerCross, int& bestRow, int& bestCol) {
+    int bestEvaluation = -9999;  // Начальная минимальная оценка для компьютера
+    bestRow = -1;  // Инициализация строк и столбцов наилучшего хода
+    bestCol = -1;
+
+    // Получаем все возможные состояния для первого хода компьютера
+    std::vector<GameState> firstMoves = getAllPossibleStates(board, isComputerCross);
+
+    // Перебираем все возможные ходы компьютера (первый уровень)
+    for (GameState& firstMove : firstMoves) {
+        //if (evaluateBoard(firstMove.board, isComputerCross) == 1) {  // Здесь предполагается, что 1 - победа компьютера
+        //    bestRow = firstMove.lastMoveRow;
+        //    bestCol = firstMove.lastMoveCol;
+        //    return;  // Если есть победа, немедленно возвращаем этот ход
+        //}
+        int firstMoveEval = 0;  // Для суммирования оценки ветки
+
+        // Получаем все возможные состояния для хода игрока (второй уровень)
+        std::vector<GameState> secondMoves = getAllPossibleStates(firstMove.board, !isComputerCross);
+
+        // Перебираем все ходы игрока
+        for (GameState& secondMove : secondMoves) {
+
+            // Получаем все возможные ходы компьютера (третий уровень)
+            std::vector<GameState> thirdMoves = getAllPossibleStates(secondMove.board, isComputerCross);
+
+            // Для каждой ветки суммируем оценки ходов компьютера на третьем уровне
+            for (GameState& thirdMove : thirdMoves) {
+                firstMoveEval += thirdMove.evaluation;
+            }
+        }
+
+        // Если суммарная оценка лучшая для компьютера, сохраняем координаты хода
+        if (firstMoveEval > bestEvaluation) {
+            bestEvaluation = firstMoveEval;
+            bestRow = firstMove.lastMoveRow;
+            bestCol = firstMove.lastMoveCol;
+        }
+    }
+
+    // Если все ветки оцениваются как 0, делаем случайный ход
+    if (bestEvaluation == 0) {
+        std::srand(std::time(0)); // Инициализация генератора случайных чисел
+        int randomIndex = std::rand() % firstMoves.size();
+        bestRow = firstMoves[randomIndex].lastMoveRow;
+        bestCol = firstMoves[randomIndex].lastMoveCol;
+    }
+}
 
 
 //void MainWindow::computerClickedButton()
