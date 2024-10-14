@@ -1,10 +1,11 @@
-#include "AI.h"
+#include "artificialintelligence.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QMessageBox>
 #include <cstdlib>
 #include <ctime>
 #include <QDebug>
+#include <QTimer>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -39,9 +40,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->centralwidget->setLayout(mainGridLayout);
 
     // Создание кнопки индикации текущего игрока
-    indicatorButton = new QPushButton(this);  //+
-    indicatorButton->setFixedSize(130, 125);  //+
-    indicatorButton->setEnabled(false);  //+
+    indicatorButton = new QPushButton(this);
+    indicatorButton->setFixedSize(130, 125);
+    indicatorButton->setEnabled(false);
     indicatorButton->move(445, 10);  // Установка кнопки по заданным координатам
     updateIndicatorButton(); // Обновление кнопки-индикатора
 
@@ -60,6 +61,7 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
+
 
 void MainWindow::showInitialDialog()
 {
@@ -97,6 +99,7 @@ void MainWindow::showInitialDialog()
         computerClickedButton();  // Компьютер делает первый ход
     }
 }
+
 
 void MainWindow::createField()
 {
@@ -137,6 +140,7 @@ void MainWindow::createField()
     // Указание расстояния между блоками 3x3
     mainGridLayout->setSpacing(15);
 }
+
 
 void MainWindow::buttonClick()
 {
@@ -299,281 +303,14 @@ int** MainWindow::convertBlocksToArray() {
 //}
 
 
-int MainWindow::evaluateBoard(int** result, bool isComputerCross) {
-    int evaluation = 0;
-
-    // Перебираем каждый блок 3x3 на поле 9x9
-    for (int blockRow = 0; blockRow < 3; blockRow++) {
-        for (int blockCol = 0; blockCol < 3; blockCol++) {
-            int computerSymbol = isComputerCross ? 1 : -1;
-            int playerSymbol = isComputerCross ? -1 : 1;
-
-            // Проверяем победу в каждом блоке 3x3
-            int blockScore = checkBlockWinner(result, blockRow, blockCol, computerSymbol, playerSymbol);
-            evaluation += blockScore;
-        }
-    }
-
-    return evaluation;
-}
-
-
-// Функция для проверки победителя в блоке 3x3
-int MainWindow::checkBlockWinner(int** result, int blockRow, int blockCol, int computerSymbol, int playerSymbol) {
-    // Начальные координаты блока в массиве result
-    int startRow = blockRow * 3;
-    int startCol = blockCol * 3;
-
-    // Проверяем строки и столбцы блока
-    for (int i = 0; i < 3; i++) {
-        // Проверка строки
-        if (result[startRow + i][startCol] == result[startRow + i][startCol + 1] &&
-            result[startRow + i][startCol] == result[startRow + i][startCol + 2]) {
-            if (result[startRow + i][startCol] == computerSymbol) return 1; // Победа компьютера
-            if (result[startRow + i][startCol] == playerSymbol) return -1; // Победа игрока
-        }
-
-        // Проверка столбца
-        if (result[startRow][startCol + i] == result[startRow + 1][startCol + i] &&
-            result[startRow][startCol + i] == result[startRow + 2][startCol + i]) {
-            if (result[startRow][startCol + i] == computerSymbol) return 1; // Победа компьютера
-            if (result[startRow][startCol + i] == playerSymbol) return -1; // Победа игрока
-        }
-    }
-
-    // Проверка диагоналей блока
-    if (result[startRow][startCol] == result[startRow + 1][startCol + 1] &&
-        result[startRow][startCol] == result[startRow + 2][startCol + 2]) {
-        if (result[startRow][startCol] == computerSymbol) return 1; // Победа компьютера
-        if (result[startRow][startCol] == playerSymbol) return -1; // Победа игрока
-    }
-
-    if (result[startRow + 2][startCol] == result[startRow + 1][startCol + 1] &&
-        result[startRow + 2][startCol] == result[startRow][startCol + 2]) {
-        if (result[startRow + 2][startCol] == computerSymbol) return 1; // Победа компьютера
-        if (result[startRow + 2][startCol] == playerSymbol) return -1; // Победа игрока
-    }
-
-    return 0; // Никто не выиграл в этом блоке
-}
-
-
-void MainWindow::toggleCellLock(int** board, int lastRow, int lastCol) {
-    // Вычисление индексов целевого блока, куда был сделан последний ход
-    int blockRow = lastRow % 3;  // Индекс строки внутри целевого блока
-    int blockCol = lastCol % 3;  // Индекс столбца внутри целевого блока
-
-    // Проверяем, выигран ли целевой блок
-    bool targetBlockWon = checkBlockWinner(board, blockRow, blockCol, 1, -1) != 0;
-
-    // Обход по всем ячейкам игрового поля
-    for (int row = 0; row < 9; ++row) {
-        for (int col = 0; col < 9; ++col) {
-            // Нахождение координат блока для текущей ячейки
-            int currentBlockRow = row / 3;
-            int currentBlockCol = col / 3;
-
-            // Проверка, выигран ли текущий блок
-            bool currentBlockWon = checkBlockWinner(board, currentBlockRow, currentBlockCol, 1, -1) != 0;
-
-            // Если ячейка находится в целевом блоке и этот блок не выигран
-            if (currentBlockRow == blockRow && currentBlockCol == blockCol && !targetBlockWon) {
-                // Разблокируем свободные клетки в целевом блоке
-                if (board[row][col] == 2) {
-                    board[row][col] = 0;  // Разблокируем клетку (ставим 0)
-                }
-            }
-            // Если блок не целевой или выигран
-            else {
-                // Все другие клетки блокируем, если они свободны и блок не выигран
-                if (!currentBlockWon && board[row][col] == 0) {
-                    board[row][col] = 2;  // Блокируем клетку (ставим 2)
-                }
-            }
-        }
-    }
-
-    // Проверка заполненности целевого блока
-    bool isTargetBlockFilled = true;
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            if (board[blockRow * 3 + i][blockCol * 3 + j] == 0) {
-                isTargetBlockFilled = false; // Найдена пустая клетка
-                break;
-            }
-        }
-        if (!isTargetBlockFilled) break; // Выход из внешнего цикла, если найдена пустая клетка
-    }
-
-    // Если целевой блок выигран или заполнен, разблокируем все незанятые клетки, кроме выигранных блоков
-    if (targetBlockWon || isTargetBlockFilled) {
-        for (int row = 0; row < 9; ++row) {
-            for (int col = 0; col < 9; ++col) {
-                int currentBlockRow = row / 3;
-                int currentBlockCol = col / 3;
-
-                // Если блок не выигран, разблокируем клетки
-                if (!checkBlockWinner(board, currentBlockRow, currentBlockCol, 1, -1) && board[row][col] == 2) {
-                    board[row][col] = 0;  // Разблокируем клетку
-                }
-            }
-        }
-    }
-}
-
-
-
-
-
-std::vector<GameState> MainWindow::getAllPossibleStates(int** board, bool isComputerCross) {
-    std::vector<GameState> possibleStates;
-
-    // Проходим по всем клеткам 9x9
-    for (int row = 0; row < 9; ++row) {
-        for (int col = 0; col < 9; ++col) {
-            if (board[row][col] == 0) {  // Если клетка пуста (доступна для хода)
-
-                // Копируем текущее состояние в новый массив
-                int** newBoard = new int*[9];
-                for (int i = 0; i < 9; ++i) {
-                    newBoard[i] = new int[9];
-                    for (int j = 0; j < 9; ++j) {
-                        newBoard[i][j] = board[i][j]; // Копируем текущее состояние доски
-                    }
-                }
-
-                // Делаем ход в эту клетку (1 - крестик, -1 - нолик)
-                newBoard[row][col] = isComputerCross ? 1 : -1;
-
-                // Создаем новое состояние
-                GameState newState;
-                newState.board = newBoard;
-                newState.isComputerCross = isComputerCross;  // Указываем, кто ходил
-
-                // Сохраняем координаты последнего хода
-                newState.lastMoveRow = row;
-                newState.lastMoveCol = col;
-
-                // Обновляем блокировки клеток после хода
-                toggleCellLock(newBoard, row, col);
-
-                // Оцениваем новое состояние
-                newState.evaluation = evaluateBoard(newBoard, isComputerCross);
-
-                // Добавляем новое состояние в список
-                possibleStates.push_back(newState);
-            }
-        }
-    }
-
-    return possibleStates;
-}
-
-//void MainWindow::findBestMove(int** board, bool isComputerCross, int& bestRow, int& bestCol) {
-//    int bestEvaluation = -9999;  // Начальная минимальная оценка для компьютера
-//    bestRow = -1;  // Инициализация строк и столбцов наилучшего хода
-//    bestCol = -1;
-//
-//    // Получаем все возможные состояния для первого хода компьютера
-//    //currentState.evaluation = evaluateBoard(currentState.board, currentState.isComputerCross);
-//    std::vector<GameState> firstMoves = getAllPossibleStates(board, isComputerCross);
-//    // Перебираем все возможные ходы компьютера (первый уровень)
-//    for (GameState& firstMove : firstMoves) {
-//        currentState.evaluation = evaluateBoard(firstMove.board, firstMove.isComputerCross);
-//        if (firstMove.evaluation == 1) {
-//            bestRow = firstMove.lastMoveRow;
-//            bestCol = firstMove.lastMoveCol;
-//            return;  // Если есть победа, немедленно возвращаем этот ход
-//        }
-//    }
-//    std::srand(std::time(0)); // Инициализация генератора случайных чисел
-//    int randomIndex = std::rand() % firstMoves.size();
-//    bestRow = firstMoves[randomIndex].lastMoveRow;
-//    bestCol = firstMoves[randomIndex].lastMoveCol;
-//}
-
-void MainWindow::findBestMove(int** board, bool isComputerCross, int& bestRow, int& bestCol) {
-    int bestEvaluation = -9999;  // Начальная минимальная оценка для компьютера
-    bestRow = -1;  // Инициализация строк и столбцов наилучшего хода
-    bestCol = -1;
-
-    // Получаем все возможные состояния для первого хода компьютера
-    std::vector<GameState> firstMoves = getAllPossibleStates(board, isComputerCross);
-
-    // Перебираем все возможные ходы компьютера (первый уровень)
-    for (GameState& firstMove : firstMoves) {
-        //if (evaluateBoard(firstMove.board, isComputerCross) == 1) {  // Здесь предполагается, что 1 - победа компьютера
-        //    bestRow = firstMove.lastMoveRow;
-        //    bestCol = firstMove.lastMoveCol;
-        //    return;  // Если есть победа, немедленно возвращаем этот ход
-        //}
-        int firstMoveEval = 0;  // Для суммирования оценки ветки
-
-        // Получаем все возможные состояния для хода игрока (второй уровень)
-        std::vector<GameState> secondMoves = getAllPossibleStates(firstMove.board, !isComputerCross);
-
-        // Перебираем все ходы игрока
-        for (GameState& secondMove : secondMoves) {
-
-            // Получаем все возможные ходы компьютера (третий уровень)
-            std::vector<GameState> thirdMoves = getAllPossibleStates(secondMove.board, isComputerCross);
-
-            // Для каждой ветки суммируем оценки ходов компьютера на третьем уровне
-            for (GameState& thirdMove : thirdMoves) {
-                firstMoveEval += thirdMove.evaluation;
-            }
-        }
-
-        // Если суммарная оценка лучшая для компьютера, сохраняем координаты хода
-        if (firstMoveEval > bestEvaluation) {
-            bestEvaluation = firstMoveEval;
-            bestRow = firstMove.lastMoveRow;
-            bestCol = firstMove.lastMoveCol;
-        }
-    }
-
-    // Если все ветки оцениваются как 0, делаем случайный ход
-    if (bestEvaluation == 0) {
-        std::srand(std::time(0)); // Инициализация генератора случайных чисел
-        int randomIndex = std::rand() % firstMoves.size();
-        bestRow = firstMoves[randomIndex].lastMoveRow;
-        bestCol = firstMoves[randomIndex].lastMoveCol;
-    }
-}
-
-
-//void MainWindow::computerClickedButton()
-//{
-//    // Генерация случайного хода для компьютера
-//    bool moveMade = false;
-//
-//    while (!moveMade)
-//    {
-//        int blockRow = std::rand() % 3;
-//        int blockCol = std::rand() % 3;
-//        int row = std::rand() % 3;
-//        int col = std::rand() % 3;
-//
-//        if (!blocks[blockRow][blockCol].hasWinner && blocks[blockRow][blockCol].buttons[row][col]->isEnabled())
-//        {
-//            QPushButton *button = blocks[blockRow][blockCol].buttons[row][col];
-//            button->click();  // Компьютер делает ход
-//            moveMade = true;
-//        }
-//    }
-//}
-
-
 void MainWindow::computerClickedButton()
 {
-    currentState.board = convertBlocksToArray();
-    if (computerFirst)
-        currentState.isComputerCross = true;
-    else
-        currentState.isComputerCross = false;
+    ai.currentTreeNode.currentState.board = convertBlocksToArray();
+    ai.currentTreeNode.currentState.isAICross = computerFirst ? true : false;
 
     int bestRow, bestCol;
-    findBestMove(currentState.board, currentState.isComputerCross, bestRow, bestCol);
+    ai.currentTreeNode.currentState.evaluation = 0;
+    ai.findBestMove(ai.currentTreeNode.currentState, bestRow, bestCol);
 
     // Получение индексов блока 3x3
     int blockRow = bestRow / 3;
@@ -586,7 +323,10 @@ void MainWindow::computerClickedButton()
     // Проверка, что клетка доступна для хода
     if (!blocks[blockRow][blockCol].hasWinner && blocks[blockRow][blockCol].buttons[cellRow][cellCol]->isEnabled()) {
         QPushButton *button = blocks[blockRow][blockCol].buttons[cellRow][cellCol];
+        //QTimer::singleShot(100, [button]() {
+        //    button->click();
         button->click();  // Компьютер делает ход
+        //});
     }
 }
 
@@ -930,7 +670,6 @@ void MainWindow::resetGame()
 
     // Сброс состояния игры
     isCrossTurn = true;
-    // isCrossTurn = std::rand() % 2 == 0; // Случайный выбор начального символа
     nextBlockRow = -1;
     nextBlockCol = -1;
 

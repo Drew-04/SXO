@@ -1,7 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "AI.h"
+#include "artificialintelligence.h"
 #include <QMainWindow>
 #include <QGridLayout>
 #include <QPushButton>
@@ -27,6 +27,7 @@ class MainWindow: public QMainWindow
 
     private:
     Ui::MainWindow *ui;
+    ArtificialIntelligence ai; // Экземпляр нового класса
     QGridLayout *mainGridLayout;
     QPushButton *button;
     QPushButton *indicatorButton; // Для индикации игрока
@@ -53,14 +54,7 @@ class MainWindow: public QMainWindow
     Block blocks[3][3];
 
     int** convertBlocksToArray();
-    void debugArrayOutput();
-    int evaluateBoard(int** result, bool isComputerCross);
-    int checkBlockWinner(int** result, int blockRow, int blockCol, int computerSymbol, int playerSymbol);
-    void toggleCellLock(int** board, int lastRow, int lastCol);
-
-    GameState currentState;
-    std::vector<GameState> getAllPossibleStates(int** currentBoard, bool isCrossTurn);
-    void findBestMove(int** board, bool isComputerCross, int& bestRow, int& bestCol);
+    //void debugArrayOutput();
 
     void createField();
     void checkForVictory(Block &block);
